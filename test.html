@@ -54,10 +54,13 @@
       var output2 = $("#output2");
       var impobtn = $("#important");
       var spambtn = $("#spam");
+      var historybtn = $("#historybtn");
 
       var hello = $("#hello");
       var hello1 = $("#hello1");
 
+      var messagelist = [];
+      var userlist = [];
       // Init PubNub
       var pubnub = PUBNUB.init({
         publish_key   : "pub-c-c28df6e6-db95-4fbb-9dec-e9c158810787",
@@ -90,10 +93,13 @@
       // send messages 
       sendbutton1.on('click', function() {
         var me = getUsername();
+        var usermess = me + input1.val();
         pubnub.publish({
           'channel' : 'impo',
           'message' : me+": "+input1.val()
         });
+       
+        messagelist.push(usermess);
       });
 
      pubnub.bind( 'keyup', input1, function(e) {
@@ -102,18 +108,34 @@
        input1.value = '';
     });
 
+
+      // check history
+      historybtn.on('click', function() {
+        pubnub.history({
+          count : 10,
+          channel : 'impo',
+          callback : function (message) {
+            console.log(messagelist);
+            for(i in messagelist){
+              output1.append(messagelist[i].join("<br />"));
+          }
+          }
+        });
+      });
+
 //--------- SPAM CHATRUMMET ---------------//
 
       // receive messages 
       spambtn.on('click', function() {
+        var me = getUsername();
         pubnub.subscribe({
           'channel'   : 'spam',
           'callback'  : function(message) {
             output2.html(output2.html() + '<br />' + message);
           }
         });
-        str = "<h3>Hej "+ me +" välkommen till spamchatten</h3>";
-        hello1.html(str);
+        str1 = "<h3>Hej "+ me +" välkommen till spamchatten</h3>";
+        hello1.html(str1);
       });
 
       // send messages 
@@ -157,7 +179,7 @@
 
 
     <div data-role="footer" data-position="fixed" datatheme='f'>
-      <p> &copy;2015 SESE Projekgrupp DM2518</p> 
+      <p> &copy;2015 FROZEN Projekgrupp DM2518</p> 
 
     </div>
 </div>
@@ -179,6 +201,8 @@
         <div id="hello"></div>
         <input class="input-block-level" type="text" placeholder="Enter chat here" id="input1">
         <button id="sendbutton1" class="btn">Skicka</button>
+        <button id="historybtn" class="btn">Visa tidigare tankar</button> 
+        <div id="history"></div>
         <div id="output1" style="margin-top:10px"></div>
       </div>
     </div>
