@@ -6,7 +6,7 @@
   <title>METAtankar</title>
 
   <!-- stylesheet -->
-  <link rel="stylesheet" type="text/css" href="metatankar.css">
+  <link rel="stylesheet" type="text/css" href="metatankarSARA.css">
   <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
 
   <!-- start icon, statusbar och mobilanpassning -->
@@ -21,12 +21,13 @@
   <!-- JQuery libraries -->
   <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
   <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 
   <!-- Include the jQuery Mobile library -->
   <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 
   <!-- Include google jsapi -->
-  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>
 
   <!-- Bootstrap libraries -->
   <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
@@ -35,11 +36,27 @@
   <!-- Pubnub libraries -->
   <script src='http://cdn.pubnub.com/pubnub-3.4.min.js'></script>
 
-  <!-- Pubnub credentials -->
-  <script src='cred.js'></script>
+	<!-- Map Code -->  
+    <script src="bibliotek.js"></script>
+    <script src="map.js"></script>
+    
 
   <script>
 
+    function validateUsername() { 
+      var username = $("#username"); 
+      var x = username.val(); 
+      console.log(x); 
+      if (x == null || x == "") 
+        { alert("Välj ett namn"); 
+      return false; } 
+      else { 
+        $("#loggin").hide(); 
+        $("#chats").show(); 
+        $("#username").hide(); 
+        $("#infobox").hide(); 
+      } 
+    }
 
 
     $(function() {
@@ -54,7 +71,7 @@
       var output2 = $("#output2");
       var impobtn = $("#important");
       var spambtn = $("#spam");
-      var historybtn = $("#historybtn");
+//var loggin = $("#");
 
       var hello = $("#hello");
       var hello1 = $("#hello1");
@@ -64,7 +81,7 @@
       // Init PubNub
       var pubnub = PUBNUB.init({
         publish_key   : "pub-c-c28df6e6-db95-4fbb-9dec-e9c158810787",
-        subscribe_key : "sub-c-d6fc11ce-ea76-11e4-85d8-02ee2ddab7fe"
+        subscribe_key : "sub-c-d6fc11ce-ea76-11e4-85d8-02ee2ddab7fe",
       });
 
       
@@ -74,30 +91,70 @@
         return user;
       }
 
-
 //-------- VIKTIGA CHATRUMMET ---------//
       // receive messages 
       impobtn.on('click', function() {
         var me = getUsername();
         pubnub.subscribe({
-          'channel'   : 'impo',
-          'callback'  : function(message) {
-            output1.html(output1.html() + '<br />' + message);
-          }
+             channel : 'impo',
+             message: function(data) {
+               if(data.username == me) {
+                  userstyle = 'myself';
+               }
+               else{
+                  userstyle = 'else'
+               }
+                output1.html('<div class="'+userstyle+'">' +data.username + ': ' +data.text + '</div>'+'<br />'+output1.html())
+             }, 
+             presence: function(data) {
+              console.log(data);
+                 // when user joins...
+                if(data.action == "join") {
+                    console.log(data);
+                }
+
+             },
+             connect : ready,
         });
+
+        pubnub.here_now({
+          channel : 'impo',
+          callback : function(m){console.log(m)}
+        });
+
+          // Connection Ready
+    function ready(data) {
+        // History
+        pubnub.history({
+               limit : 30,
+             channel : 'impo',
+            callback : function(msgs) {
+                historylist = msgs[0];
+                for(i in historylist){
+                  console.log(historylist);
+                    //output1.append(historylist[i]);
+                }
+            }
+        });
+    }
         
-        str = "<h3>Hej "+ me +" välkommen till den viktiga chatten</h3>";
+        str = "<h3>Hej "+ me +"!</h3><h5> Du är i den viktiga chatten. Behave.</h5>";
         hello.html(str);
       });
 
       // send messages 
       sendbutton1.on('click', function() {
         var me = getUsername();
+        console.log(me);
         var usermess = me + input1.val();
         pubnub.publish({
           'channel' : 'impo',
-          'message' : me+": "+input1.val()
+            message: {
+              text: input1.val(),
+              username: me,
+            }
         });
+        input1.val('');
        
         messagelist.push(usermess);
       });
@@ -109,52 +166,125 @@
     });
 
 
-      // check history
-      historybtn.on('click', function() {
-        pubnub.history({
-          count : 10,
-          channel : 'impo',
-          callback : function (message) {
-            console.log(messagelist);
-            for(i in messagelist){
-              output1.append(messagelist[i].join("<br />"));
-          }
-          }
-        });
-      });
-
 //--------- SPAM CHATRUMMET ---------------//
 
       // receive messages 
       spambtn.on('click', function() {
-        var me = getUsername();
+          var me = getUsername();
         pubnub.subscribe({
-          'channel'   : 'spam',
-          'callback'  : function(message) {
-            output2.html(output2.html() + '<br />' + message);
-          }
+             channel : 'spam',
+             message: function(data) {
+               if(data.username == me) {
+                  userstyle = 'myself';
+               }
+               else{
+                  userstyle = 'else'
+               }
+                output2.html('<div class="'+userstyle+'">' +data.username + ': ' +data.text + '</div>'+'<br />'+output2.html())
+             }, 
+             presence: function(data) {
+              console.log(data);
+                 // when user joins...
+                if(data.action == "join") {
+                    console.log(data);
+                }
+
+             },
+             connect : ready,
         });
-        str1 = "<h3>Hej "+ me +" välkommen till spamchatten</h3>";
-        hello1.html(str1);
+
+        pubnub.here_now({
+          channel : 'spam',
+          callback : function(m){console.log(m)}
+        });
+
+          // Connection Ready
+    function ready(data) {
+        // History
+        pubnub.history({
+               limit : 30,
+             channel : 'spam',
+            callback : function(msgs) {
+                historylist = msgs[0];
+                for(i in historylist){
+                  console.log(historylist);
+                    //output1.append(historylist[i]);
+                }
+            }
+        });
+    }
+        
+        str = "<h3>TJAA "+ me +"!</h3><h5> Varsågod. SPAMMA!</h5>";
+        hello1.html(str);
       });
 
       // send messages 
       sendbutton2.on('click', function() {
         var me = getUsername();
+        console.log(me);
+        var usermess = me + input2.val();
         pubnub.publish({
           'channel' : 'spam',
-          'message' : me+": "+input2.val()
+            message: {
+              text: input2.val(),
+              username: me,
+            }
         });
+        input1.val('');
+       
+        messagelist.push(usermess);
       });
 
-    }); // $(function() {
+     pubnub.bind( 'keyup', input2, function(e) {
+       if ((e.keyCode || e.charCode) !== 13) return;
+       send(input2.value);
+       input2.value = '';
+    });
+      });
+    
+    
   </script>
 </head>
 
 <body>
+<!--/// Karta ///--> 
+
+
+<div data-role="page" id="page-map" data-theme='f'>
+    <div data-role="header" data-theme='f'>
+        <h1>Gå till Meta</h1>
+    </div>
+	
+  
+  <div id="travel">
+<strong>Mode of Travel: </strong>
+<select id="mode" onchange="calcRoute();">
+  <option value="DRIVING">Driving</option>
+  <option value="WALKING">Walking</option>
+  <option value="BICYCLING">Bicycling</option>
+  <option value="TRANSIT">Transit</option>
+</select>
+</div>
+
+  <div id="map-canvas"></div>
+ 
+ 
+  <div id= "print"></div>
+  <center<h1>Go to META to use the chat!</h1> </center>
+  <div id="knapp"></div>
+ 
+ 
+	<div data-role="footer" data-position="fixed" datatheme='f'>
+      <p> &copy;2015 FROZEN Projekgrupp DM2518</p> 
+
+    </div>
+</div>
+	
+<!--/// STOP Karta ///--> 
+
+
 
 <!--/// Start du är i META ///-->
-
 <div data-role="page" id="page-one" data-theme='f'>
     <div data-role="header" data-theme='f'>
         <h1>METAtankar</h1>
@@ -163,17 +293,18 @@
     <div data-role="main" class="ui-content" data-theme='f'>
       <div id="info">
        <div id="infobox">
-        <h5>Du är nu i META! Välj ett chatnamn och dela med dig av dina tankar. </h5>
+        <h4>Välkommen till META!</h4><h5>Välj ett chatnamn för att börja dela med dig av dina tankar. </h5>
       </div>
       <div> 
-        <input class="input" type="text" placeholder="Välj ett namn" id="username">
-      </div>  
+        <input class="input" type="text" placeholder="Välj ett namn" id="username"> 
+<div class="btn2" id="loggin" onClick="validateUsername();">OK!</div>
+      </div> 
 
         <!-- Knapparna -->
-      
+        <div id="chats">
             <div id="left" style="margin-top:50px"><a href="#page-two" class="btn1" id="important">VIKTIGT!</a></div>  
             <div id="right" style="margin-top:50px"><a href="#page-three" class="btn1" id="spam">SPAM</a></div>
-      
+        </div>
       </div>
     </div>
 
@@ -183,35 +314,30 @@
 
     </div>
 </div>
-
 <!-- //// STOP du är i META //// -->
 
 
 <!--/// VIKTIGT chatrum ///-->
-
 <div data-role="page" id="page-two" data-theme='f'>
     <div data-role="header" data-theme='f'>
         <h1>VIKTIGT!</h1>
         <a href="#page-one" style="margin-top:38px" class="btnback">&#9668; Tillbaka </a>
     </div>
-
     <div data-role="main" class="ui-content" data-theme='f'>
       <div class="container">
         
         <div id="hello"></div>
+          <div id="chat">
+            <div id="output1" style="margin-top:10px"></div>
+           </div>
         <input class="input-block-level" type="text" placeholder="Enter chat here" id="input1">
-        <button id="sendbutton1" class="btn">Skicka</button>
-        <button id="historybtn" class="btn">Visa tidigare tankar</button> 
-        <div id="history"></div>
-        <div id="output1" style="margin-top:10px"></div>
+        <div><button id="sendbutton1" class="btn3">Skicka</button></div>
       </div>
     </div>
 </div>
-
 <!--/// STOP VIKTIGT chatrum ///-->
 
 <!--/// SPAM chatrum ///-->
-
 <div data-role="page" id="page-three" data-theme='f'>
     <div data-role="header" data-theme='f'>
         <h1>SPAM!</h1>
@@ -221,13 +347,14 @@
     <div data-role="main" class="ui-content" data-theme='f'>
       <div class="container">
         <div id="hello1"></div>
-        <input class="input-block-level" type="text" placeholder="Enter chat here" id="input2">
-        <button id="sendbutton2" class="btn">Skicka</button>
+        <div id="chat">
         <div id="output2" style="margin-top:10px"></div>
+      </div>
+        <input class="input-block-level" type="text" placeholder="Enter chat here" id="input2">
+        <button id="sendbutton2" class="btn3">Skicka</button>
       </div>
     </div>
 </div>
-
 <!--/// STOP SPAM chatrum ///-->
 
 
