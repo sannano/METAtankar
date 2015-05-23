@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>METAtankar</title>
+
+  <!-- stylesheet -->
+  <link rel="stylesheet" type="text/css" href="metatankar.css">
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
+
+  <!-- Start icon, statusbar och mobilanpassning -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" sizes="144x144" href="meta.png">
+  <link href="heaven.png" media="(device-width: 320px)and(device-height: 568px)and(-webkit-device-pixel-ratio: 2)"
+        rel="apple-touch-startup-image">
+
+  <!-- JQuery libraries -->
+  <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
+  <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+  
+
+  <!-- Include the jQuery Mobile library -->
+  <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+
+  <!-- Include Google jsapi -->
+  <!--<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>-->
+  <script type="text/javascript" src="http://maps.google.com/maps/api/js?v=3&sensor=false&language=en"></script>
+
+  <!-- Bootstrap libraries -->
+  <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+  <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+  <!-- Pubnub libraries -->
+  <script src='http://cdn.pubnub.com/pubnub-3.4.min.js'></script>
+
+	<!-- Map Code -->  
+  <script src="bibliotek.js"></script>
+  <script src="map.js"></script>
+  
+  <!-- Chat Code --> 
+  <script src="chat.js"></script>
+
+</head>
+
+<body>
+
+<!--/// Karta ///--> 
+<div data-role="page" id="page-map" data-theme='f'>
+  <div data-role="header" data-theme='f'>
+    <h1>Gå till Meta</h1>
+  </div>
+
+  <div id="travel">
+    <strong>Mode of Travel: </strong>
+    <select id="mode" onchange="calcRoute(position);">
+      <option value="DRIVING">Driving</option>
+      <option value="WALKING">Walking</option>
+      <option value="BICYCLING">Bicycling</option>
+      <option value="TRANSIT">Transit</option>
+    </select>
+  </div>
+
+  <div id="map_canvas"></div>
+  <div id= "print"></div>
+  <center>
+    <h5>Gå till Meta för att dela med dig av dina tankar!</h5>
+  </center>
+  <div id="knapp"></div>
+	<div data-role="footer" data-position="fixed" datatheme='f'>
+    <p> &copy;2015 FROZEN Projekgrupp DM2518</p> 
+  </div>
+</div>	
+<!--/// STOP Karta ///--> 
+
+
+<!--/// Start du är i META ///-->
+<div data-role="page" id="page-one" data-theme='f'>
+  <div data-role="header" data-theme='f'>
+    <h1>METAtankar</h1>
+  </div>
+
+  <div data-role="main" class="ui-content" data-theme='f'>
+    <div id="info">
+      <div id="infobox">
+        <h4>Välkommen till META!</h4><h5>Välj ett chatnamn för att börja dela med dig av dina tankar. </h5>
+      </div>
+      <div> 
+        <input class="input" type="text" placeholder="Välj ett namn" id="username"> 
+        <div class="btn2" id="loggin" onClick="validateUsername();">OK!</div>
+      </div> 
+        <!-- Knapparna -->
+      <div id="chats">
+        <div id="left" style="margin-top:50px"><a href="#page-two" class="btn1" id="important">VIKTIGT!</a></div>  
+        <div id="right" style="margin-top:50px"><a href="#page-three" class="btn1" id="spam">SPAM</a></div>
+      </div>
+    </div>
+  </div>
+
+  <div data-role="footer" data-position="fixed" datatheme='f'>
+    <p> &copy;2015 FROZEN Projekgrupp DM2518</p> 
+  </div>
+</div>
+<!-- //// STOP du är i META //// -->
+
+
+<!--/// VIKTIGT chatrum ///-->
+<div data-role="page" id="page-two" data-theme='f'>
+  <div data-role="header" data-theme='f'>
+    <h1>VIKTIGT!</h1>
+    <a href="#page-one" style="margin-top:38px" class="btnback">&#9668; Tillbaka </a>
+  </div>
+  <div data-role="main" class="ui-content" data-theme='f'>
+    <div class="container"> 
+      <div id="hello"></div>
+      <div id="chat">
+        <div id="output1" style="margin-top:10px"></div>
+      </div>
+      <div>
+      <input class="input-block-level" type="text" placeholder="Enter chat here" id="input1">
+      </div>
+      <div>
+        <button id="sendbutton1" class="btn2">Skicka</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--/// STOP VIKTIGT chatrum ///-->
+
+
+<!--/// SPAM chatrum ///-->
+<div data-role="page" id="page-three" data-theme='f'>
+  <div data-role="header" data-theme='f'>
+    <h1>SPAM!</h1>
+    <a href="#page-one" style="margin-top:38px" class="btnback">&#9668; Tillbaka </a>
+  </div>
+
+  <div data-role="main" class="ui-content" data-theme='f'>
+    <div class="container">
+      <div id="hello1"></div>
+      <div id="chat">
+          <div id="output2" style="margin-top:10px"></div>
+      </div>
+      <input class="input-block-level" type="text" placeholder="Enter chat here" id="input2">
+      <button id="sendbutton2" class="btn2">Skicka</button>
+    </div>
+  </div>
+</div>
+<!--/// STOP SPAM chatrum ///-->
+
+
+</body>
+</html>
